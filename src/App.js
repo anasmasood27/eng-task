@@ -2,26 +2,42 @@
 
 import React, { useState, useEffect } from "react";
 import ResultList from "./ResultList";
-import state from "./state/initialState";
 import Pagination from "pagination-component";
+import useData from "./hooks/useData";
+import EmployeeModal from "./EmployeeModal";
 import { css } from "glamor";
 
 const App = () => {
   const perPage = 15;
+  const data = useData();
+  const [showModal, setShowModal] = useState(false);
   const [employees, setEmployees] = useState([]);
   const [filterRecords, setFilterRecords] = useState([]);
   const [searchParams, setSearchParams] = useState("");
   const [activePage, setActivePage] = useState(0);
+  const [updateEmployee, setUpdateEmployee] = useState();
 
   useEffect(() => {
     if (searchParams === "") {
       loadResults();
+    } else {
+      performSearch();
     }
-  }, [searchParams]);
+  }, [searchParams, data.employeeList]);
 
   const loadResults = async () => {
-    setEmployees(state);
-    setFilterRecords([...state].slice(0, perPage));
+    setEmployees(data.employeeList);
+    setFilterRecords([...data.employeeList].slice(0, perPage));
+  };
+
+  const onUpdateEmployee = (employee) => {
+    setUpdateEmployee(employee);
+    setShowModal(true);
+  };
+
+  const onModalClose = () => {
+    setUpdateEmployee(undefined);
+    setShowModal(false);
   };
 
   const handlePageChange = (pageNumber) => {
@@ -36,7 +52,7 @@ const App = () => {
 
   const handleChange = ({ target }) => setSearchParams(target.value);
 
-  const handleClick = () => {
+  const performSearch = () => {
     if (searchParams.length != 2) {
       let data = employees.filter(
         (user) =>
@@ -49,8 +65,9 @@ const App = () => {
     }
   };
 
-  const handleKeyDown = (event) =>
-    event.key === "Enter" && searchParams.length >= 2 && loadResults();
+  const handleKeyDown = (event) => {
+    searchParams.length >= 2 && setSearchParams(event.target.value);
+  };
 
   const clearSearch = (event) => setSearchParams("");
 
@@ -81,6 +98,12 @@ const App = () => {
     <div className="ui text container">
       <div className="ui large header" style={{ marginTop: 20 }}>
         Employees
+        <button
+          className="ui button green right floated"
+          onClick={() => setShowModal(true)}
+        >
+          Add New Employee
+        </button>
       </div>
 
       <div className="ui action input" style={{ width: "100%" }}>
@@ -100,7 +123,7 @@ const App = () => {
         )}
         <button
           className="ui button"
-          onClick={handleClick}
+          onClick={performSearch}
           disabled={searchParams.length < 3}
         >
           Search
@@ -108,7 +131,13 @@ const App = () => {
       </div>
 
       <div className="results">
-        {filterRecords && <ResultList employees={filterRecords} />}
+        {filterRecords && (
+          <ResultList
+            employees={filterRecords}
+            data={data}
+            onUpdateEmployee={onUpdateEmployee}
+          />
+        )}
         {filterRecords.length == 0 && (
           <h3 style={{ textAlign: "center" }}> No Records Found </h3>
         )}
@@ -122,6 +151,12 @@ const App = () => {
           }}
         />
       </div>
+      <EmployeeModal
+        showModal={showModal}
+        onModalClose={onModalClose}
+        onFromSubmit={data.saveEmployee}
+        employee={updateEmployee}
+      />
     </div>
   );
 };

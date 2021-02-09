@@ -1,7 +1,7 @@
 import React from "react";
 
-const ResultItem = ({ item }) => (
-  <div className="result-item">
+const ResultItem = ({ item, removeEmployee, onUpdateEmployee }) => (
+  <div className="result-item" onClick={() => onUpdateEmployee(item)}>
     <div>
       <img src={item.image} alt="profile" />
       <div className="demo">
@@ -13,6 +13,9 @@ const ResultItem = ({ item }) => (
     </div>
 
     <div>
+      <div className="remove-button" onClick={() => removeEmployee(item.id)}>
+        X
+      </div>
       <div className="technicality">{item.city}</div>
     </div>
   </div>
